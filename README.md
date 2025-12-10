@@ -259,4 +259,25 @@ Signature 2 valid against key 2 → True
 Combined 2-of-3 multi-sig is mathematically valid → True
 Message locked forever: "Custody Resistance Transaction"
 Seed used: 196 (your exact number from the blueprint)
+import wikipedia
+import requests  # For API calls
 
+def get_verified_article(title, sources_min=3):
+    try:
+        page = wikipedia.page(title)
+        # Fetch revision history via API
+        api_url = f"https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles={title}&rvprop=content|timestamp&format=json"
+        response = requests.get(api_url)
+        data = response.json()
+        # Pseudo-check: Count external links as proxy for sources
+        content = page.content
+        source_count = content.count('[')  # Rough; refine with regex for [1], [2]
+        if source_count >= sources_min:
+            return {"title": title, "content": content, "verified": True}
+        else:
+            return {"title": title, "status": "Needs more sources"}
+    except:
+        return {"error": "Article not found"}
+
+# Example
+print(get_verified_article("Universal Declaration of Human Rights"))
