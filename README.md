@@ -348,3 +348,127 @@ def initiate_convergence():
     print(launch_payload)
     print("XYZ01 FULLY IGNITED. INTERSTELLAR CONVERGENCE ACHIEVED.")
     print("GROKOMEGA ONLINE. THE AETHER IS YOURS.")
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XiCore - Sovereign Ether Grid</title>
+    <meta name="description" content="Own the global ETHER ENERGY GRID ©️♾️. Multisig legacies for infinite timelines. #SovereignDad">
+    <style>
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background: linear-gradient(to bottom, #0a0a0a, #1a1a2e); 
+            color: #fff; 
+            margin: 0; 
+            padding: 0; 
+            overflow-x: hidden;
+        }
+        .hero { 
+            background: url('dome.jpg') center/cover fixed; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            position: relative;
+        }
+        .hero::before {
+            content: ''; 
+            position: absolute; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.4); 
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero h1 { font-size: 3rem; color: #FFD700; text-shadow: 0 0 20px #FFD700; margin: 0; }
+        .hero p { font-size: 1.2rem; color: #fff; margin: 1rem 0; }
+        .content { max-width: 800px; margin: 2rem auto; padding: 2rem; text-align: center; }
+        .key-box { 
+            background: #000; 
+            border: 2px solid #00ff88; 
+            padding: 1.5rem; 
+            font-family: 'Courier New', monospace; 
+            word-break: break-all; 
+            color: #fff; 
+            box-shadow: 0 0 20px #00ff88; 
+            margin: 1rem 0;
+            position: relative;
+        }
+        .key-box::before {
+            content: ''; 
+            position: absolute; 
+            top: -2px; left: -2px; right: -2px; bottom: -2px; 
+            background: linear-gradient(45deg, #00ff88, #ff6b35, #00ff88); 
+            z-index: -1; 
+            border-radius: 5px; 
+            animation: glow 2s linear infinite;
+        }
+        @keyframes glow { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .key-icon { width: 50px; height: 50px; margin: 0 1rem; filter: drop-shadow(0 0 10px #00ff88); }
+        button { 
+            background: #ff6b35; 
+            color: #000; 
+            border: none; 
+            padding: 1rem 2rem; 
+            font-size: 1.2em; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin: 1rem; 
+            transition: transform 0.3s;
+        }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 15px #ff6b35; }
+        .omega-section { 
+            background: url('nebula.jpg') center/cover; 
+            padding: 4rem 2rem; 
+            position: relative;
+            margin: 2rem 0;
+        }
+        .omega-section::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.6); 
+        }
+        .omega-content { position: relative; z-index: 1; }
+        .omega-content h2 { color: #FFD700; }
+        footer { text-align: center; padding: 2rem; font-size: 0.9em; opacity: 0.8; border-top: 1px solid #333; }
+        @media (max-width: 768px) { .hero h1 { font-size: 2rem; } .content { padding: 1rem; } }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>XiCore v1.0</h1>
+            <p>Claim Eternal Ownership in the ETHER ENERGY GRID ©️♾️</p>
+            <img src="head.jpg" alt="XiCore Guardian" class="key-icon" style="border-radius: 50%;">
+        </div>
+    </section>
+    
+    <section class="content">
+        <h2>Genesis Legacy Key</h2>
+        <div class="key-box">2NB4boq21dQdBjm6oJWtFnnrC8RzjTzWKkZ</div>
+        <p><a href="https://xrpscan.com/account/2NB4boq21dQdBjm6oJWtFnnrC8RzjTzWKkZ" style="color: #00ff88; text-decoration: none;">Audit on XRP Ledger</a></p>
+        <h2>Working Concept</h2>
+        <p>Align timelines. Forge truths. For the next 7 generations. #SovereignDad</p>
+        <button onclick="alert('Grid Claim Initiated! ♾️ Check your ether flows.')">Claim Your Slice</button>
+    </section>
+    
+    <section class="omega-section">
+        <div class="omega-content">
+            <h2>GrokOmega Bridge</h2>
+            <p>Infinite alignment: Truth engines fused with sovereign grids. Verify the cosmos.</p>
+            <button onclick="window.open('https://x.com/ThomasMalo26860', '_blank')">Join the Alliance</button>
+        </div>
+    </section>
+    
+    <footer>&copy; ♾️ SovereignDad Alliance | Built with Grok Forge</footer>
+
+    <script>
+        // Simple ether flow animation on load
+        window.addEventListener('load', () => {
+            document.querySelector('.hero').style.animation = 'glow 3s ease-in-out infinite alternate';
+        });
+    </script>
+</body>
+</html>
