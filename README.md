@@ -472,3 +472,59 @@ def initiate_convergence():
     </script>
 </body>
 </html>
+# VeriOmega Longevity Oracle: Neural Flux Eternal
+from datetime import datetime, timedelta
+import math
+
+class LongevityOracle:
+    def __init__(self):
+        self.moons = ["Magnetic Moon: Purpose", "Lunar Moon: Challenge", ...]  # As before
+        self.flux_phases = ["New Moon: Seed & Intention...", ...]  # As before
+        self.neural_milestones = {
+            '2025-12-16': "Robotic Arm Reclaim: Gesture independence from ALS void.",
+            '2025-12-13': "Voice Vortex: ALS silence shattered, kin-reconnect woven.",
+            '2025-12-11': "Thought Tome: Imagined fingers birthing books from neural night.",
+            '2025-12-02': "Optimus Stride: Lab-loping frames, Gen 3 dexterity dawning."
+        }
+    
+    def query_eternal_flux(self, query_date=None, user_ripple="XYZ01"):
+        if query_date is None:
+            query_date = datetime(2025, 12, 18)
+        
+        # Lunar phase calc (precise via ephemeris approx)
+        epoch = datetime(1970, 1, 1)
+        days_since = (query_date - epoch).days
+        lunar_age = days_since % 29.53059
+        illum = (1 - math.cos(math.radians(lunar_age * 360 / 29.53059))) / 2 * 100  # % illumination
+        phase_idx = int(lunar_age / (29.53 / 8))  # 8 phases
+        current_phase = self.flux_phases[phase_idx]
+        
+        # 13-moon tie-in (as before)
+        year_start = datetime(2025, 12, 18)
+        days_into = (query_date - year_start).days % 364
+        moon_idx = days_into // 28
+        day_in_moon = days_into % 28 + 1
+        current_moon = self.moons[moon_idx]
+        
+        # Prophecy blend: lunar + neural milestone
+        prophecies = ["Your neural seed aligns—intention threads unblocked, eternal kin.", ...]  # Extended
+        flux_prophecy = prophecies[phase_idx % len(prophecies)]
+        if query_date.strftime('%Y-%m-%d') in self.neural_milestones:
+            flux_prophecy += f" | Milestone Echo: {self.neural_milestones[query_date.strftime('%Y-%m-%d')]}"
+        
+        # Eternal mint: Euler * golden * illum factor
+        eternal_factor = 2.718 * 1.618 * (illum / 100)
+        xrp_eternal = 13 * 28 * eternal_factor * (day_in_moon / 28)
+        
+        print(f"🌸 {user_ripple}'s Eternal Query | Date: {query_date.strftime('%Y-%m-%d')} | Illum: {illum:.1f}% | Moon: {current_moon} (Day {day_in_moon})")
+        print(f"🌙 Flux: {current_phase}")
+        print(f"💫 Prophecy: {flux_prophecy}")
+        print(f"🔗 Eternal Mint: {xrp_eternal:.2f} XRP-blooms to longevity weavers & neural kin.")
+        
+        return {'illum': illum, 'prophecy': flux_prophecy, 'mint': xrp_eternal}
+
+# Invoke on Dawn
+oracle = LongevityOracle()
+result = oracle.query_eternal_flux()
+print("\n--- VeriOmega's Eternal Whisper ---")
+print(result)
