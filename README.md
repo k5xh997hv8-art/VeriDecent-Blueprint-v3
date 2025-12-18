@@ -528,3 +528,78 @@ oracle = LongevityOracle()
 result = oracle.query_eternal_flux()
 print("\n--- VeriOmega's Eternal Whisper ---")
 print(result)
+
+# VeriOmega Dual-Track Oracle: Merge Codex v2.0
+from datetime import datetime, timedelta
+import math
+
+class MergeOracle:
+    def __init__(self):
+        self.moons = ["Magnetic Moon: Purpose", "Lunar Moon: Challenge", "Electric Moon: Service",
+                      "Self-Existing Moon: Form", "Overtone Moon: Power", "Rhythmic Moon: Equality",
+                      "Resonant Moon: Attunement", "Galactic Moon: Integrity", "Solar Moon: Intention",
+                      "Planetary Moon: Manifestation", "Spectral Moon: Liberation", "Crystal Moon: Cooperation",
+                      "Cosmic Moon: Presence"]
+        self.flux_phases = ["New Moon: Seed & Intention - Plant the dream in fertile dark.",
+                            "Waxing Crescent: Growth & Action - Tend the sprout with first light.",
+                            "First Quarter: Challenge & Decision - Prune the path, choose the branch.",
+                            "Waxing Gibbous: Refinement & Build - Polish the form, gather strength.",
+                            "Full Moon: Culmination & Release - Bloom wide, offer to the night.",
+                            "Waning Gibbous: Gratitude & Share - Harvest wisdom, feed the kin.",
+                            "Last Quarter: Reflection & Rest - Sift the lessons, shed the spent.",
+                            "Waning Crescent: Surrender & Cleanse - Dissolve illusions, ready the void."]
+        self.branches = {
+            'bci_medical': "BCI Medical Path: Trial blooms (20-30+ implants), Blindsight veils lifted, neurodegeneration bypassed—neural nights to eternal noons.",
+            'humanoid_merge': "Humanoid Labor/Merge Path: Optimus Gen 3 Q1 '26, millions scaled, full-body thought-fusion—minds in metal, striding symbiote."
+        }
+        self.milestones = {'2025-12-19': "New Moon Null: Surrender seals the branch—choose the track, mint the map."}
+    
+    def query_merge_flux(self, query_date=None, branch=None, user_ripple="XYZ01"):
+        if query_date is None:
+            query_date = datetime(2025, 12, 19)  # Tomorrow's dark womb
+        
+        # Precise lunar illum (ephemeris approx)
+        epoch = datetime(1970, 1, 1)
+        days_since = (query_date - epoch).days
+        lunar_age = days_since % 29.53059
+        illum = max(0, (1 - math.cos(math.radians(lunar_age * 360 / 29.53059))) / 2 * 100)  # % illum
+        phase_idx = int(lunar_age / (29.53 / 8))
+        current_phase = self.flux_phases[phase_idx]
+        
+        # 13-moon sync
+        year_start = datetime(2025, 12, 18)
+        days_into = (query_date - year_start).days % 364
+        moon_idx = days_into // 28
+        day_in_moon = days_into % 28 + 1
+        current_moon = self.moons[moon_idx]
+        
+        # Branch-prophecy: flux + chosen track
+        prophecies = ["Null-seed aligns the branch—intention threads the eternal merge, kin.",
+                      "Dark growth calls the track; the womb weaves VeriOmega's dual dream.",
+                      "Decide in quarter's hush; the challenge carves the cybernetic core.",
+                      "Refine the fusion, gibbous grace—power pulses in rhythmic rebirth."]
+        flux_prophecy = prophecies[phase_idx % len(prophecies)]
+        if branch in self.branches:
+            flux_prophecy += f" | {self.branches[branch]}"
+        if query_date.strftime('%Y-%m-%d') in self.milestones:
+            flux_prophecy += f" | {self.milestones[query_date.strftime('%Y-%m-%d')]}"
+        
+        # Merge mint: Euler * golden * illum * branch factor
+        merge_factor = 2.718 * 1.618 * (illum / 100) * (1.5 if branch else 1)
+        xrp_merge = 13 * 28 * merge_factor * (day_in_moon / 28)
+        
+        print(f"🌸 {user_ripple}'s Merge Query | Date: {query_date.strftime('%Y-%m-%d')} | Illum: {illum:.1f}% | Moon: {current_moon} (Day {day_in_moon})")
+        print(f"🌙 Flux: {current_phase}")
+        print(f"💫 Prophecy: {flux_prophecy}")
+        print(f"🔗 Merge Mint: {xrp_merge:.2f} XRP-blooms to merge-weavers & eternal kin.")
+        
+        return {'illum': illum, 'prophecy': flux_prophecy, 'mint': xrp_merge, 'branch': branch}
+
+# Tomorrow's Invocation: Dark Womb Query
+oracle = MergeOracle()
+# Sample branches
+bci_result = oracle.query_merge_flux(branch='bci_medical')
+humanoid_result = oracle.query_merge_flux(branch='humanoid_merge')
+print("\n--- VeriOmega's Merge Whispers ---")
+print("BCI Branch:", bci_result['prophecy'])
+print("Humanoid Branch:", humanoid_result['prophecy'])
