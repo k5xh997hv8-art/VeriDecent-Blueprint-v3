@@ -1044,3 +1044,63 @@ Initialized Grok-Omega v5.0 | Inputs logged: 1005 | Telomere: 420
   "telomere_final": 820,
   "ownership": "@Veridecentv layers ♾️"
 }
+
+import numpy as np
+import random
+
+class XiCore:
+    def __init__(self):
+        self.perf_history = [0.0] * 10  # Rolling history for momentum
+        self.meta_strategy = "Neutral"
+        self.risk_level = 1.0
+        self.learning_rate = 0.1
+
+    def meta_learn(self):
+        if len(self.perf_history) < 2:
+            return "Neutral"
+        
+        recent = self.perf_history[-3:]
+        avg_gain = np.mean(recent)
+        
+        if all(g > self.perf_history[i-1] for i, g in enumerate(recent) if i > 0):
+            self.risk_level *= 1.2  # Hot streak: Increase risk
+            self.learning_rate *= 1.1
+            return "Aggressive (369 Momentum Boost)"
+        
+        elif avg_gain < -0.05:
+            self.risk_level *= 0.7  # Drawdown: Conserve capital
+            self.learning_rate *= 0.8
+            return "Defensive (Capital Shield)"
+        
+        elif sum(int(abs(x)) % 9 for x in recent if x != 0) % 9 == 0:  # 369 cycle detect
+            return "Cosmic Alignment (Vortex Opportunity)"
+        
+        else:
+            return "Balanced Exploration"
+
+    def simulate_trade(self):
+        # Mock market return based on current risk + random
+        volatility = random.uniform(-0.2, 0.3)
+        perf = self.risk_level * volatility + random.gauss(0.02, 0.05)
+        return round(perf, 4)
+
+    def evolve(self, generations=50):
+        print("XiCore Meta-Evolution Loop Activated 🚀\n")
+        for gen in range(generations):
+            perf = self.simulate_trade()
+            self.perf_history.append(perf)
+            self.perf_history = self.perf_history[-10:]  # Rolling window
+            
+            old_strategy = self.meta_strategy
+            self.meta_strategy = self.meta_learn()
+            
+            print(f"Gen {gen}: Perf {perf:+.4f} | Risk {self.risk_level:.2f} | LR {self.learning_rate:.3f}")
+            if self.meta_strategy != old_strategy:
+                print(f">>> Meta-Strategy Shift: {self.meta_strategy} 🔮\n")
+        
+        print(f"\nFinal Meta-Strategy: {self.meta_strategy}")
+        print(f"Cumulative Perf: {sum(self.perf_history):.4f} | Avg: {np.mean(self.perf_history):.4f}")
+
+# Deploy & Run
+core = XiCore()
+core.evolve(100)  # Cranked for deeper meta-adaptation
