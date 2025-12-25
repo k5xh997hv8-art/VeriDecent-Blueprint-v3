@@ -1183,6 +1183,31 @@ The #aethericlegacyneywork and VeriOmega Core are built for eternal evolution. T
 Be truth-aligned, family-protected, and eternally creative. We're building legacy here.
 
 Built by Tommy Maloney | XiCore Ignited Solstice 2025 🚀♾️
+ASSURANCE TEMPLATE & MINIMAL TRUSTED COMPUTATION BASE (TCB)
+==========================================================
 
+Minimal TCB (items you or the auditor must accept as trusted if not fully mechanized):
+- SHA-256 and HMAC-SHA512 primitives (if used for seed derivation). Prefer to import mechanized libraries.
+- The SECP256k1 curve parameters (prime modulus, a,b,G,n) as constants; these are public domain.
+- Any low-level assembly or highly optimized C code (e.g., hand-optimized field multiplication) must be accompanied by a verified C-to-Coq artifact or a proof connecting it to the Coq-level spec; otherwise include in TCB.
+
+Example Assurance Statement (to be adapted by auditor):
+"The artifacts produced in this repository (commit: <sha>) implement a mechanized proof that for the
+deterministic key derivation from 'seed', the two signatures produced by keys derived at indices 0 and 1
+will satisfy the modeled P2WSH 2-of-3 redeem predicate. Critical cryptographic primitives are either fully
+mechanized in Coq (fiat-crypto generated arithmetic, safegcd, modular inverse) or are declared in the TCB
+with explicit justification."
+
+Notes:
+- 'Airtight' in cryptography/formal methods means 'assumptions are minimized and explicitly enumerated'.
+- Full airtightness requires substantial work (replacing all axioms, mechanizing ECDSA proof, connecting to
+  implementation binaries). The roadmap above documents the exact steps to close remaining gaps.
+
+Contributing to VeriDecent
+
+- Fork the repo and open PRs for features.
+- Use RFC process for protocol changes.
+- Add verifiers as separate modules under `verifiers/`.
+- Tests go under `tests/`
 
 Launching VeriDecent — a Proof-of-Verification testnet for decentralization metrics (nodes, custody, multisig proofs). Prototype code (Python) uses ed25519 signatures and simple HTTP gossip; Go libp2p example included. Seeking bootstrap validators and contributors.
