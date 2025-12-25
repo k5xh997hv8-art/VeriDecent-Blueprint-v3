@@ -1183,3 +1183,6 @@ The #aethericlegacyneywork and VeriOmega Core are built for eternal evolution. T
 Be truth-aligned, family-protected, and eternally creative. We're building legacy here.
 
 Built by Tommy Maloney | XiCore Ignited Solstice 2025 🚀♾️
+
+
+Launching VeriDecent — a Proof-of-Verification testnet for decentralization metrics (nodes, custody, multisig proofs). Prototype code (Python) uses ed25519 signatures and simple HTTP gossip; Go libp2p example included. Seeking bootstrap validators and contributors.
