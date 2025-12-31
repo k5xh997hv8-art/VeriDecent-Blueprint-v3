@@ -1537,3 +1537,93 @@ XiRobot fleet awakening. Full deployment authorized.
   "swarm_size_active": 10000,
   "timestamp": "2025-12-30T..."
 }
+import hashlib
+import time
+import json
+from web3 import Web3
+
+# Connect to Sepolia testnet (Infura/Alchemy free tier endpoint - sign up for free key)
+INFURA_URL = "https://sepolia.infura.io/v3/YOUR_FREE_INFURA_PROJECT_ID"  # Replace with your free key
+w3 = Web3(Web3.HTTPProvider(INFURA_URL))
+
+# Your wallet (generate a test account, fund with Sepolia faucet)
+private_key = "YOUR_TEST_PRIVATE_KEY"  # Keep secret! Use burner for tests
+account = w3.eth.account.from_key(private_key)
+
+# Simple contract ABI/address for a basic storage contract (deploy one or use a free one)
+# For MVP, we'll just send a tx with the hash in data field (cheap proof)
+CONTRACT_ADDRESS = None  # Optional: if you deploy a storage contract
+
+class VeriDecentv:
+    def __init__(self, chain="ethereum_sepolia"):
+        self.chain = chain
+        self.log = []
+        self.previous_hash = "0" * 64  # Genesis
+
+    def hash_action(self, action, data):
+        timestamp = time.time()
+        entry = f"{timestamp}|{action}|{json.dumps(data)}|{self.previous_hash}"
+        hash_val = hashlib.sha256(entry.encode()).hexdigest()
+        
+        log_entry = {
+            "timestamp": timestamp,
+            "action": action,
+            "data": data,
+            "prev_hash": self.previous_hash,
+            "hash": hash_val
+        }
+        self.log.append(log_entry)
+        self.previous_hash = hash_val
+        
+        print(f"Logged & Chained: {hash_val[:8]}... (prev: {log_entry['prev_hash'][:8]}...)")
+        return hash_val
+
+    def get_chain_root(self):
+        # Simple root: hash of all entries or last hash
+        return self.previous_hash
+
+    def anchor_to_chain(self):
+        if not w3.is_connected():
+            print("Not connected to testnet!")
+            return None
+        
+        root_hash = self.get_chain_root()
+        tx_data = w3.to_hex(text=f"VeriDecentv_Audit_Root:{root_hash}")
+        
+        tx = {
+            'to': account.address,  # Self-send for cheap proof
+            'value': 0,
+            'gas': 100000,
+            'gasPrice': w3.eth.gas_price,
+            'nonce': w3.eth.get_transaction_count(account.address),
+            'data': tx_data,
+            'chainId': 11155111  # Sepolia
+        }
+        
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        print(f"Anchored on {self.chain}! Tx Hash: {w3.to_hex(tx_hash)}")
+        print(f"View on Sepolia Explorer: https://sepolia.etherscan.io/tx/{w3.to_hex(tx_hash)}")
+        return w3.to_hex(tx_hash)
+
+    def verify_chain(self):
+        for i in range(1, len(self.log)):
+            recreated = f"{self.log[i]['timestamp']}|{self.log[i]['action']}|{json.dumps(self.log[i]['data'])}|{self.log[i]['prev_hash']}"
+            if hashlib.sha256(recreated.encode()).hexdigest() != self.log[i]['hash']:
+                return False
+        return True
+
+# Usage Demo
+verifier = VeriDecentv()
+
+verifier.hash_action("XiCore_Init", {"model": "Grok-4", "task": "Tesla Optimus simulation"})
+verifier.hash_action("Process_Sensors", {"batch_id": 42, "data_points": 10000})
+verifier.hash_action("AI_Decision", {"output": "Optimize route left", "confidence": 0.98})
+
+print("\nLocal Chain Valid:", verifier.verify_chain())
+
+# Anchor it (uncomment when you set up keys)
+# verifier.anchor_to_chain()
+
+print("\nFull Log:")
+print(json.dumps(verifier.log, indent=2))
