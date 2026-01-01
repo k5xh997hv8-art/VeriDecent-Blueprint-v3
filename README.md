@@ -1847,3 +1847,116 @@ Agent 9 | Gold Value: 0.965 | Fitness: 18.92
 Agent 7 | Gold Value: 0.981 | Fitness: 18.35
 
 From base stone to eternal gold: Purpose fulfilled. ♾️
+
+Require Import Coq.Lists.List.
+Import ListNotations.
+
+(* Simplified ECDSA pubkey and signature types – abstract away crypto primitives *)
+Parameter PubKey : Type.
+Parameter Signature : Type.
+Parameter Message : Type.
+
+(* Valid signature predicate – assumed from Bitcoin script semantics *)
+Parameter valid_signature : Message → PubKey → Signature → Prop.
+
+(* 2-of-3 threshold condition *)
+Definition two_of_three_valid 
+  (m : Message)
+  (pk1 pk2 pk3 : PubKey)
+  (sigs : list (PubKey * Signature))
+  : Prop :=
+  length sigs = 2 ∧
+  exists s1 s2,
+    sigs = [(pk1, s1); (pk2, s2)] ∧ valid_signature m pk1 s1 ∧ valid_signature m pk2 s2
+  ∨ sigs = [(pk1, s1); (pk3, s2)] ∧ valid_signature m pk1 s1 ∧ valid_signature m pk3 s2
+  ∨ sigs = [(pk2, s1); (pk3, s2)] ∧ valid_signature m pk2 s1 ∧ valid_signature m pk3 s2.
+
+(* Theorem: any valid 2-of-3 spend is secure (no single key compromise) *)
+Theorem multisig_security :
+  forall m pk1 pk2 pk3 sigs,
+    two_of_three_valid m pk1 pk2 pk3 sigs →
+    (* Cannot forge with only one key – would require breaking ECDSA *) 
+    (* Formalize as: no single key can produce two valid sigs *)
+    True.  (* Placeholder – expand with proper ECDSA hardness assumptions *)
+Admitted.
+
+(* Redeem script verification without full crypto evaluation *)
+Definition verify_multisig_script
+  (script : list PubKey) (* [pk1; pk2; pk3] *)
+  (m : Message)
+  (sigs : list Signature)
+  : bool :=
+  (* In practice, map to Bitcoin Script logic – here pure functional check *)
+  match script, sigs with
+  | [_; _; _], [s1; s2] => true  (* Threshold met *)
+  | _, _ => false
+  end.
+
+// Pseudocode for XiCore ZK module
+fn prove_multisig_compliance(witness: MultisigWitness) -> Proof {
+    let circuit = MultisigThresholdCircuit { pubs: None, sigs: witness.sigs };
+    halo2::generate_proof(circuit, witness)
+}
+
+Require Import Coq.Lists.List.
+Import ListNotations.
+
+(* Bitcoin Script opcodes as inductive type *)
+Inductive Opcode :=
+  | OP_2 : Opcode
+  | OP_3 : Opcode
+  | OP_CHECKMULTISIG : Opcode
+  | OP_PUSHDATA : nat -> Opcode.  (* Simplified *)
+
+(* Redeem script for standard 2-of-3 *)
+Definition redeem_script (pk1 pk2 pk3 : PubKey) : list Opcode :=
+  [OP_2; OP_PUSHDATA pk1; OP_PUSHDATA pk2; OP_PUSHDATA pk3; OP_3; OP_CHECKMULTISIG].
+
+(* Execution semantics – threshold enforcement *)
+Definition script_valid (script : list Opcode) (sigs : list Signature) : Prop :=
+  match script with
+  | [OP_2; _; _; _; OP_3; OP_CHECKMULTISIG] => length sigs = 2  (* Threshold met *)
+  | _ => False
+  end.
+
+Theorem threshold_enforced :
+  forall pk1 pk2 pk3 sigs,
+    script_valid (redeem_script pk1 pk2 pk3) sigs ->
+    length sigs >= 2 /\ length sigs <= 3.  (* Prove no under/over sig attack *)
+Proof.
+  intros. unfold script_valid, redeem_script in H. simpl in H.
+  split; omega.  (* Auto-prove bounds *)
+Qed.
+
+use halo2_proofs::{
+    circuit::{Chip, Layouter, Value},
+    plonk::{Circuit, ConstraintSystem, Error},
+    pasta::Fp,
+};
+
+#[derive(Clone)]
+struct MultisigThresholdConfig {
+    // Public: redeem script hash, message hash
+    // Private: which 2 keys, signatures
+}
+
+struct MultisigThresholdCircuit {
+    sigs: [Value<Fp>; 2],  // Witness
+    pubs: [Value<Fp>; 3],  // Partial witness
+}
+
+impl Circuit<Fp> for MultisigThresholdCircuit {
+    fn configure(meta: &mut ConstraintSystem<Fp>) -> Self::Config {
+        // Constrain ECDSA verification gadgets (use halo2_ecdsa lib)
+        // Enforce exactly 2 valid sigs from 3 pubs
+        // Prove threshold without revealing combination
+    }
+
+    fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<Fp>) -> Result<(), Error> {
+        // Load private witnesses
+        // Apply ECDSA checks
+        // Range proof on sig count = 2
+        Ok(())
+    }
+}
+
