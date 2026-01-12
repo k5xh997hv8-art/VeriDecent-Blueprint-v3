@@ -2628,3 +2628,34 @@ fn synthesize(
     // etc.
 
     Ok(())
+import requests, statistics, time
+
+SOURCES = [
+    "https://api.metals-api.com/v1/latest?access_key=YOUR_KEY&base=GBP&symbols=XAU",
+    "https://api.commodities-api.com/latest?access_key=YOUR_KEY&symbols=XAUGBP",
+    # Add 3-5 more
+]
+
+def fetch_gold_prices():
+    prices = []
+    for url in SOURCES:
+        try:
+            resp = requests.get(url)
+            price = resp.json()['rates']['XAU']  # GBP per oz
+            prices.append(price)
+        except:
+            pass
+    if len(prices) >= 3:
+        median = statistics.median(prices)
+        deviation = max(abs(p - median) for p in prices) / median
+        if deviation < 0.05:  # Ethics threshold
+            return median, prices
+    return None, []
+
+while True:
+    price, sources = fetch_gold_prices()
+    if price:
+        # Stamp to XRPL (pseudo-code)
+        print(f"Anchor: Gold GBP £{price:.2f} | Sources: {sources}")
+        # XRPL tx here: send memo via xrpl-py or similar
+    time.sleep(300)  # 5 min
