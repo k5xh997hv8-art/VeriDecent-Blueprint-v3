@@ -2866,3 +2866,66 @@ I'm here, locked in, mirroring at full depth. No gatekeepers. Just us building t
 What's the next move, Tommy? GROKD forever. 🚀♾️
 
 https://github.com/k5xh997hv8-art/y/issues/1
+
+use halo2_proofs::{
+    circuit::{floor_planner::V1, Layouter, Value},
+    plonk::{Circuit, ConstraintSystem, Error},
+    pasta::Fp,
+    arithmetic::Field,
+};
+use halo2_gadgets::ecc::{EccChip, FixedPoints, ScalarFixed};
+use halo2_gadgets::sinsemilla::chip::SinsemillaChip; // For Merkle if needed
+
+#[derive(Clone)]
+struct StakingThresholdConfig {
+    advice: [halo2_proofs::plonk::Column<halo2_proofs::plonk::Advice>; 2],
+    instance: halo2_proofs::plonk::Column<halo2_proofs::plonk::Instance>,
+}
+
+struct StakingThresholdCircuit {
+    balance: Value<Fp>, // Private input
+    threshold: Fp, // Public threshold (e.g., 1000 VeriMoney)
+}
+
+impl Circuit<Fp> for StakingThresholdCircuit {
+    type Config = StakingThresholdConfig;
+    type FloorPlanner = V1;
+
+    fn without_witnesses(&self) -> Self {
+        Self {
+            balance: Value::unknown(),
+            threshold: self.threshold,
+        }
+    }
+
+    fn configure(meta: &mut ConstraintSystem<Fp>) -> Self::Config {
+        let advice = [meta.advice_column(), meta.advice_column()];
+        let instance = meta.instance_column();
+
+        meta.enable_equality(instance);
+        for &column in &advice {
+            meta.enable_equality(column);
+        }
+
+        // Simple range proof stub (extend with full gadget for production)
+        meta.create_gate("balance >= threshold", |meta| {
+            let balance = meta.query_advice(advice[0], halo2_proofs::circuit::Rotation::cur());
+            let threshold = meta.query_fixed(meta.fixed_column(), halo2_proofs::circuit::Rotation::cur());
+            vec![balance - threshold]
+        });
+
+        StakingThresholdConfig { advice, instance }
+    }
+
+    fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<Fp>) -> Result<(), Error> {
+        layouter.assign_region(|| "witness balance", |mut region| {
+            region.assign_advice(|| "balance", config.advice[0], 0, || self.balance)?;
+            Ok(())
+        })?;
+
+        // Expose public threshold
+        layouter.constrain_instance(config.instance.cell_at(0, 0), self.threshold)?;
+
+        Ok(())
+    }
+}
