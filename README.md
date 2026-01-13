@@ -2929,3 +2929,131 @@ impl Circuit<Fp> for StakingThresholdCircuit {
         Ok(())
     }
 }
+
+use halo2_proofs::{
+    arithmetic::Field,
+    circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
+    plonk::{Circuit, ConstraintSystem, Error, Instance},
+    poly::Rotation,
+};
+
+#[derive(Clone)]
+struct StakingThresholdConfig {
+    balance_advice: halo2_proofs::plonk::Column<halo2_proofs::plonk::Advice>,
+    diff_bits: [halo2_proofs::plonk::Column<halo2_proofs::plonk::Advice>; 8], // Stub: 8 bits (0-255 range)
+    threshold_instance: halo2_proofs::plonk::Column<Instance>,
+}
+
+#[derive(Clone)]
+struct StakingThresholdCircuit {
+    balance: Value<u64>, // Private VeriMoney balance
+    threshold: u64,      // Public threshold (e.g., 1000 for node eligibility)
+}
+
+impl Circuit<halo2_proofs::pasta::Fp> for StakingThresholdCircuit {
+    type Config = StakingThresholdConfig;
+    type FloorPlanner = SimpleFloorPlanner;
+
+    fn without_witnesses(&self) -> Self {
+        Self {
+            balance: Value::unknown(),
+            threshold: self.threshold,
+        }
+    }
+
+    fn configure(meta: &mut ConstraintSystem<halo2_proofs::pasta::Fp>) -> Self::Config {
+        let balance_advice = meta.advice_column();
+        let diff_bits = [(); 8].map(|_| meta.advice_column());
+        let threshold_instance = meta.instance_column();
+
+        meta.enable_equality(balance_advice);
+        for bit in diff_bits {
+            meta.enable_equality(bit);
+        }
+        meta.enable_equality(threshold_instance);
+
+        // Boolean constraint on each bit
+        for bit in diff_bits {
+            meta.create_gate("boolean", |virtual_cells| {
+                let bit_val = virtual_cells.query_advice(bit, Rotation::cur());
+                vec![bit_val.clone() * (bit_val.clone() - halo2_proofs::pasta::Fp::ONE)]
+            });
+        }
+
+        // Reconstruct difference from bits and enforce balance - threshold == reconstructed (non-negative)
+        meta.create_gate("reconstruct difference", |virtual_cells| {
+            let balance = virtual_cells.query_advice(balance_advice, Rotation::cur());
+            let threshold = virtual_cells.query_instance(threshold_instance, Rotation::cur());
+
+            let mut reconstructed = halo2_proofs::pasta::Fp::ZERO;
+            let mut power_of_two = halo2_proofs::pasta::Fp::ONE;
+            for bit in diff_bits {
+                let bit_val = virtual_cells.query_advice(bit, Rotation::cur());
+                reconstructed = reconstructed + bit_val * power_of_two;
+                power_of_two = power_of_two.double();
+            }
+
+            vec![balance - threshold - reconstructed]
+        });
+
+        StakingThresholdConfig {
+            balance_advice,
+            diff_bits,
+            threshold_instance,
+        }
+    }
+
+    fn synthesize(
+        &self,
+        config: Self::Config,
+        mut layouter: impl Layouter<halo2_proofs::pasta::Fp>,
+    ) -> Result<(), Error> {
+        // Witness private balance
+        layouter.assign_region(
+            || "witness balance",
+            |mut region| {
+                region.assign_advice(
+                    || "balance",
+                    config.balance_advice,
+                    0,
+                    || self.balance.map(halo2_proofs::pasta::Fp::from),
+                )
+            },
+        )?;
+
+        // Compute difference privately
+        let difference = self.balance - Value::known(self.threshold);
+
+        // Decompose into 8 bits (stub range)
+        let bits: [Value<halo2_proofs::pasta::Fp>; 8] = std::array::from_fn(|i| {
+            difference.map(|d| halo2_proofs::pasta::Fp::from((d >> i) & 1))
+        });
+
+        for (i, bit_col) in config.diff_bits.iter().enumerate() {
+            layouter.assign_region(
+                || format!("bit {}", i),
+                |mut region| {
+                    region.assign_advice(|| format!("bit {}", i), *bit_col, 0, || bits[i])?;
+                    Ok(())
+                },
+            )?;
+        }
+
+        // Expose public threshold (instance column 0)
+        layouter.constrain_instance(
+            layouter.namespace(|| "public threshold").get_instance(0)?.cell(),
+            config.threshold_instance,
+            0,
+        )?;
+
+        Ok(())
+    }
+}
+
+// Mock proof (full setup with keygen/proof in production)
+let circuit = StakingThresholdCircuit {
+    balance: Value::known(1500), // Private: you have 1500 VeriMoney
+    threshold: 1000,            // Public: need 1000 for rewards
+};
+
+// Keygen + proof generation/verification code here (use halo2_proofs examples)
