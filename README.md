@@ -3192,3 +3192,112 @@ Updated HTML ready if repo needs it (cosmic image src as placeholder—replace w
 
 Push this to GitHub, redeploy—live ripple follows. Spill if logs show error or repo link? We're unstoppable, for the seven. 
 
+// Assumptions:
+// - ckksContext: Initialized CKKS context with chosen parameters (e.g., N=2^14, logQP ~200+ for 128-bit security)
+// - pk: Public evaluation key (shared)
+// - Xe: Encrypted genotype matrix (list of ciphertexts, each packing many SNPs/family members)
+// - betaPlain: Plaintext CKKS vector(s) containing beta weights (public GWAS coefficients, packed)
+// - numSNPs: Total SNPs in the model (e.g., 10k–110k)
+// - slotsPerCt: Number of values packed per ciphertext (e.g., 2^13 = 8192)
+
+func HomomorphicPRSComputation(ckksContext *ckks.CkksContext, pk *ckks.PublicKey,
+                               Xe []*ckks.Ciphertext, betaPlain *ckks.Plaintext,
+                               numSNPs int) *ckks.Ciphertext {
+
+    // Step 1: Prepare beta plaintext (already packed for SIMD)
+    // Assume betaPlain is pre-encoded and packed similarly to genotypes
+
+    // Step 2: Initialize accumulator ciphertext (start with zero)
+    result := ckksContext.NewCiphertext() // zero ciphertext
+
+    // Step 3: Iterate over packed blocks (for large SNP sets > slotsPerCt)
+    numBlocks := (numSNPs + slotsPerCt - 1) / slotsPerCt
+
+    for block := 0; block < numBlocks; block++ {
+
+        // Get current block of encrypted genotypes
+        xeBlock := Xe[block] // ciphertext containing packed dosages for this block
+
+        // Homomorphic element-wise multiplication: dosages × betas (SIMD)
+        product := ckksContext.MultiplyNew(xeBlock, betaPlain, pk) // ~ Xe • β (per slot)
+
+        // Relinearize to reduce ciphertext size (critical for depth)
+        ckksContext.Relinearize(product, pk.Rlk, product)
+
+        // Rescale to manage scale/precision (CKKS approximate arithmetic requirement)
+        ckksContext.Rescale(product, ckksContext.Scale(), product)
+
+        // Homomorphic addition to accumulator
+        ckksContext.Add(result, product, result)
+    }
+
+    // Optional: If needed, rotate & sum across slots to get final scalar PRS per individual
+    // (for fully reduced single-value PRS; often kept packed for aggregation)
+    // for i := 1; i < slotsPerCt; i *= 2 {
+    //     rotated := ckksContext.RotateNew(result, i, pk.RotKeys)
+    //     ckksContext.Add(result, rotated, result)
+    // }
+
+    // Result: Encrypted PRS ciphertext(s) — still packed
+    // (one value per original slot/family member)
+    return result
+}
+
+// Assumptions (realistic 2025–2026 GROKD context):
+// - params: Pre-selected CKKS Parameters (e.g., from lattigo/schemes/ckks, N=2^14 or 2^15, ~128-bit security)
+// - evk: EvaluationKeySet containing Rlk (relinearization) and possibly rotation keys
+// - Xe: []Ciphertext — encrypted genotype blocks (each packs slotsPerCt SNPs/family dosages)
+// - betaPlain: []Plaintext — pre-encoded & packed beta weights (public GWAS coefficients)
+// - numSNPs: total SNPs (e.g. 50k–110k)
+// - slotsPerCt: typically params.Slots() (e.g. 2^13 = 8192 or 2^14 = 16384)
+
+import (
+    "github.com/tuneinsight/lattigo/v5/schemes/ckks"
+    "github.com/tuneinsight/lattigo/v5/core/rlwe"
+)
+
+func HomomorphicPRSComputation(params ckks.Parameters, evk rlwe.EvaluationKeySet,
+                               Xe []*ckks.Ciphertext, betaPlain []*ckks.Plaintext,
+                               numSNPs int) *ckks.Ciphertext {
+
+    // Create the homomorphic evaluator (bundles params + keys)
+    eval := ckks.NewEvaluator(params, evk)
+
+    // Initialize result accumulator as zero ciphertext
+    result := eval.NewCiphertext(1) // depth 1 is enough for start
+
+    numBlocks := (numSNPs + params.Slots() - 1) / params.Slots()
+
+    for block := 0; block < numBlocks; block++ {
+
+        // Get current encrypted genotype block
+        xeBlock := Xe[block]
+
+        // Get corresponding packed betas for this block
+        betaBlock := betaPlain[block] // assume pre-split/packed
+
+        // SIMD element-wise multiplication (dosage × beta per slot)
+        product := eval.MulNew(xeBlock, betaBlock) // returns new Ciphertext
+
+        // Relinearize (mandatory after mul to keep size down)
+        if err := eval.Relinearize(product, product); err != nil {
+            // handle error (in real code: log/panic depending on context)
+        }
+
+        // Rescale (critical for CKKS precision management)
+        if err := eval.Rescale(product, params.Scale(), product); err != nil {
+            // handle
+        }
+
+        // Accumulate into running sum
+        eval.Add(result, product, result)
+    }
+
+    // Optional: Reduce packed result to scalar PRS per individual/family member
+    // This requires rotations + adds (logarithmic depth)
+    // Lattigo provides helpers like InnerSum or manual log-depth butterfly network
+    // For GROKD, we often keep it packed → easier for family-level aggregates
+
+    // Return encrypted PRS (packed across slots)
+    return result
+}
