@@ -3301,3 +3301,105 @@ func HomomorphicPRSComputation(params ckks.Parameters, evk rlwe.EvaluationKeySet
     // Return encrypted PRS (packed across slots)
     return result
 }
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XiCore | Decentralized Core for Eternal Legacy</title>
+  <meta name="description" content="XiCore is the verifiable, immutable, decentralized protocol powering eternal family legacies. Built for truth, privacy, and permanence.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <!-- Hero Section -->
+  <header class="gradient-bg py-20 px-6 text-center">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-5xl md:text-7xl font-bold mb-6">XiCore</h1>
+      <p class="text-xl md:text-2xl mb-8 text-gray-300">The Decentralized Core for Eternal Family Legacy</p>
+      <p class="text-lg max-w-2xl mx-auto mb-10 text-gray-400">
+        A verifiable, immutable protocol that preserves truth across generations—powered by blockchain, zero-knowledge proofs, and rights-aware intelligence.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#features" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-lg font-semibold transition glow">Explore Features</a>
+        <a href="#get-started" class="border border-blue-600 hover:bg-blue-600 px-8 py-4 rounded-lg font-semibold transition">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-6 bg-gray-800">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-4xl font-bold text-center mb-12">Core Layers</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 hover:border-blue-600 transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-400">Verification Engine</h3>
+          <p class="text-gray-400">Zero-knowledge and multisig validation ensures only authentic contributions enter the legacy.</p>
+        </div>
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 hover:border-blue-600 transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-400">Storytelling Heart</h3>
+          <p class="text-gray-400">AI-guided narrative preservation that honors intent, emotion, and truth without alteration.</p>
+        </div>
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 hover:border-blue-600 transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-400">Immutable Archive</h3>
+          <p class="text-gray-400">Permanent storage on Arweave/IPFS—your family's truth lives forever, uncensorable.</p>
+        </div>
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 hover:border-blue-600 transition">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-400">XiPhone Bridge</h3>
+          <p class="text-gray-400">Seamless mobile access as a PWA—capture and verify memories anywhere, anytime.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About / Vision Section -->
+  <section class="py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-8">Built for Eternity</h2>
+      <p class="text-lg text-gray-300 mb-8">
+        XiCore is the factual, decentralized foundation of GROKD—the Eternal Family Legacy Platform. 
+        No central authority. No data exploitation. Just verifiable truth preserved for your descendants.
+      </p>
+      <p class="text-gray-400">
+        Created by <a href="https://x.com/LegacyN1187" class="text-blue-400 hover:underline">@LegacyN1187</a> | 
+        Part of THE FACTUAL DECENTRALISED NETWORK
+      </p>
+    </div>
+  </section>
+
+  <!-- Get Started / CTA -->
+  <section id="get-started" class="py-20 px-6 bg-gray-800">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-8">Launch Your Legacy</h2>
+      <p class="text-lg text-gray-300 mb-10">
+        XiCore is open and decentralized. Start building your eternal archive today.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="https://grok.x.ai" target="_blank" class="bg-green-600 hover:bg-green-700 px-8 py-4 rounded-lg font-semibold transition">Build with Grok</a>
+        <a href="mailto:your-email@example.com" class="border border-green-600 hover:bg-green-600 px-8 py-4 rounded-lg font-semibold transition">Contact Us</a>
+      </div>
+      <p class="text-sm text-gray-500 mt-10">Coming soon: Wallet-connected verification & on-chain deployment</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 px-6 text-center text-gray-500 text-sm border-t border-gray-800">
+    <p>&copy; 2026 XiCore | Decentralized & Rights-Aware | All legacies preserved forever.</p>
+  </footer>
+
+  <!-- Minimal JS for smooth scroll (optional) -->
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>
