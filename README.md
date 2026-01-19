@@ -3606,3 +3606,169 @@ function handleTask(msg) {
 This snippet's battle-ready: Proofs are compact (~few KB), verification's fast/public-side, and it slots right into our existing flow. For Halo2 alt: Swap to halo2-wasm (load via CDN, define circuit in Rust/WASM bridge), but SnarkyJS keeps us pure JS for easier mobile prototyping. In RN/Expo: Bundle SnarkyJS as a dep, run in background via expo-task-manager for persistent swarming.
 
 Lattice is thriving—your refinements are the fuel. Next branch? Task schema prototype (e.g., JSON for fine-tune jobs)? Expo RN app skeleton? Or halo2 variant if you prefer Rust flavor? Seed it. ♾⚡
+
+Flower Framework Tutorial (Quickstart with PyTorch, 2026)Flower (now at flower.ai) is one of the most popular and flexible federated learning frameworks, especially for cross-device scenarios like mobile/edge swarms. The official Quickstart PyTorch tutorial demonstrates a complete federated learning system training a CNN on CIFAR-10 across simulated clients using FedAvg. It's ideal for prototyping XiCore-like concepts.Here's a step-by-step guide based on the latest official docs (as of early 2026).1. Installation and Project Setupbash
+
+# Install Flower
+pip install flwr
+
+# Create a new project from the official quickstart template
+flwr new @flwrlabs/quickstart-pytorch
+
+This scaffolds a project directory (quickstart-pytorch) with:client_app.py: Client logic
+server_app.py: Server logic
+task.py: Model, data loading, train/test functions
+pyproject.toml: Config (e.g., default rounds, fractions)
+
+Install in editable mode:bash
+
+cd quickstart-pytorch
+pip install -e .
+
+2. Key Components (in task.py)Model (simple CNN):
+
+python
+
+import torch.nn as nn
+import torch.nn.functional as F
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
+
+Data Loading (uses flwr-datasets for partitioned CIFAR-10):
+
+python
+
+from flower_datasets import FederatedDataset, IidPartitioner
+from torchvision.transforms import Compose, ToTensor, Normalize
+from torch.utils.data import DataLoader
+
+def load_data(partition_id, num_partitions, batch_size):
+    partitioner = IidPartitioner(num_partitions=num_partitions)
+    fds = FederatedDataset(dataset="uoft-cs/cifar10", partitioners={"train": partitioner})
+    partition = fds.load_partition(partition_id)
+    partition_train_test = partition.train_test_split(test_size=0.2, seed=42)
+
+    transforms = Compose([ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    def apply_transforms(batch):
+        batch["img"] = [transforms(img) for img in batch["img"]]
+        return batch
+
+    partition_train_test = partition_train_test.with_transform(apply_transforms)
+    trainloader = DataLoader(partition_train_test["train"], batch_size=batch_size, shuffle=True)
+    testloader = DataLoader(partition_train_test["test"], batch_size=batch_size)
+    return trainloader, testloader
+
+Train/Test Functions: Standard PyTorch loops (omitted for brevity; see docs for full code).
+
+3. Client Side (client_app.py)Clients train locally on their partition and return updated weights/metrics.python
+
+from flwr.app import ClientApp, Message, Context
+from flwr.app.record import ArrayRecord, MetricRecord, RecordDict
+from task import Net, train as train_fn, load_data
+
+app = ClientApp()
+
+@app.train()
+def train(msg: Message, context: Context):
+    # Load model with server weights
+    model = Net()
+    model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    # Load local data
+    partition_id = context.node_config["partition-id"]
+    num_partitions = context.node_config["num-partitions"]
+    batch_size = context.run_config["batch-size"]
+    trainloader, _ = load_data(partition_id, num_partitions, batch_size)
+
+    # Train
+    train_loss = train_fn(model, trainloader, context.run_config["local-epochs"],
+                          msg.content["config"]["lr"], device)
+
+    # Return updated model and metrics
+    model_record = ArrayRecord(model.state_dict())
+    metrics = {"train_loss": train_loss, "num-examples": len(trainloader.dataset)}
+    return Message(content=RecordDict({"arrays": model_record, "metrics": MetricRecord(metrics)}), reply_to=msg)
+
+(There's also an @app.evaluate() for validation.)4. Server Side (server_app.py)Uses FedAvg strategy.python
+
+from flwr.serverapp import ServerApp, Grid
+from flwr.serverapp.strategy import FedAvg
+from flwr.app.record import ArrayRecord, ConfigRecord
+from task import Net
+
+app = ServerApp()
+
+@app.main()
+def main(grid: Grid, context: Context) -> None:
+    num_rounds = context.run_config["num-server-rounds"]
+    lr = context.run_config["learning-rate"]
+
+    # Initial global model
+    global_model = Net()
+    arrays = ArrayRecord(global_model.state_dict())
+
+    # FedAvg strategy
+    strategy = FedAvg(fraction_evaluate=context.run_config["fraction-evaluate"])
+
+    # Run federation
+    result = strategy.start(
+        grid=grid,
+        initial_arrays=arrays,
+        train_config=ConfigRecord({"lr": lr}),
+        num_rounds=num_rounds,
+    )
+
+    # Save final model
+    torch.save(result.arrays.to_torch_state_dict(), "final_model.pt")
+
+5. Running the Simulationbash
+
+flwr run .
+
+Defaults: 10 simulated clients, 3 rounds, FedAvg.
+Override config: flwr run . --run-config "num-server-rounds=10 local-epochs=5"
+
+This is great for XiCore prototyping—Flower supports simulation for thousands of clients, high-latency tolerance, and easy extensions (e.g., LoRA for LLM fine-tuning).Gossip Learning ProtocolsGossip Learning (GL) is a fully decentralized alternative to standard federated learning (FL), with no central server/coordinator. Nodes (devices) randomly select peers, exchange models (or updates), average them, and continue local training. It's inspired by epidemic/gossip protocols in distributed systems.Core PrinciplesLocal Update: Each node trains on its own data (e.g., SGD step).
+Gossip Exchange: Periodically, a node picks a random peer (or neighbors), sends/receives models, and aggregates (usually averaging: new_model = (my_model + peer_model)/2).
+Topology: Random peer sampling, ring, mesh, or dynamic overlays.
+Variants: Simple averaging, weighted, Delta-Sum (base + updates for better convergence), GoSGD (for deep nets).
+
+Differences from Standard FLNo Central Server: FL has a coordinator for aggregation; GL is peer-to-peer only → more resilient, no single point of failure/control.
+Asynchronous & Dynamic: Handles churn, intermittent connectivity better (ideal for phone swarms).
+Convergence: Slower in some cases but matches centralized accuracy with low overhead (e.g., within 0.5% on benchmarks).
+
+Advantages for XiCore/GROKD VisionTrue user sovereignty: No trusted coordinator.
+Resilience: Works in ad-hoc networks (e.g., idle devices discovering peers via Bluetooth/WiFi-direct).
+Privacy: Only models exchanged, not data.
+Recent (2025) advances: Delta-Sum for sparse comms, Byzantine-resilient variants (GRANITE), LLM consensus via gossip (+4% accuracy lifts).
+
+Implementations & FrameworksGossipy (Python lib for simulation):bash
+
+pip install gossipy-dfl
+
+Supports various protocols (e.g., all-to-all, token-based). Examples in repo for linear models, K-Means, matrix factorization, deep nets on non-IID data.
+GLow (2025): Modifies Flower for gossip simulations—arbitrary topologies, matches centralized accuracy closely.
+Swarm Learning (HPE/SAP-inspired, blockchain-coordinated gossip): More enterprise-focused.
+Research prototypes: GossipFL, ProxyFL (proxy sharing).
+
+Gossip protocols align perfectly with your decentralized swarm vision—more so than client-server FL like Flower. Start with Gossipy for simulations, or extend Flower via GLow for hybrid approaches.What next—dive into a Gossipy example, modify Flower for gossip, or something else for XiCore prototyping?
+
