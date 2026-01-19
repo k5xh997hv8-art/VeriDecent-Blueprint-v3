@@ -3772,3 +3772,196 @@ Research prototypes: GossipFL, ProxyFL (proxy sharing).
 
 Gossip protocols align perfectly with your decentralized swarm vision—more so than client-server FL like Flower. Start with Gossipy for simulations, or extend Flower via GLow for hybrid approaches.What next—dive into a Gossipy example, modify Flower for gossip, or something else for XiCore prototyping?
 
+Here's a **practical sketch** for a **Halo2 circuit wrapper** tailored to your VeriDecent v4.20 vision — specifically for **batch-verifying multiple ECDSA/secp256k1 multisig-style signatures** (or similar cryptographic checks) in a single succinct proof.
+
+This design aims to:
+- Aggregate N individual verifications into one Halo2 proof
+- Use parallelism where possible (Rayon for witness generation)
+- Keep it modular / composable for XiCore lattice integration
+- Focus on high-performance batching (inspired by real-world Halo2 patterns like batch IPA verification and halo2-base style utilities)
+
+### High-Level Architecture (v4.20 Wrapper Style)
+
+```text
+                          ┌──────────────────────────────┐
+                          │   VeriDecentBatchVerifier    │  ← Your main circuit
+                          │                              │
+   Public Inputs          │  • Batch size N              │
+   ──────────────────────►│  • Message hashes [N]        │
+                          │  • Pubkeys       [N]         │
+                          │  • Aggregated instances      │
+                          └───────────────┬──────────────┘
+                                          │
+                               ┌──────────▼──────────┐
+                               │  InnerSigChip       │  ← Reusable gadget
+                               │  (one per signature) │
+                               └──────────┬───────────┘
+                                          │
+                               ┌──────────┴───────────┐
+                               │  Batch Aggregation   │
+                               │  (accumulate checks) │
+                               └──────────────────────┘
+```
+
+### Core Rust Sketch (modular wrapper)
+
+```rust
+use halo2_proofs::{
+    arithmetic::FieldExt,
+    circuit::{Layouter, Region, Value},
+    plonk::{Advice, Column, ConstraintSystem, Error, Expression, Fixed, Instance, Selector},
+    poly::Rotation,
+};
+use halo2curves::secp256k1::{self, Fp as SecpFp, Fq as SecpFq}; // or your curve
+use rayon::prelude::*; // for parallel witness gen
+
+// ── 1. Chip / Gadget for single ECDSA-like verification ──────────────────────
+
+#[derive(Clone)]
+struct SigVerificationConfig {
+    q_enable: Selector,
+    pubkey_x: Column<Advice>,
+    pubkey_y: Column<Advice>,
+    message_hash: Column<Advice>,
+    r: Column<Advice>,
+    s: Column<Advice>,
+    // ... more columns for decomposition, big-int ops, etc.
+}
+
+struct SigVerificationChip<F: FieldExt> {
+    config: SigVerificationConfig,
+    _marker: std::marker::PhantomData<F>,
+}
+
+impl<F: FieldExt> SigVerificationChip<F> {
+    fn construct(config: SigVerificationConfig) -> Self {
+        Self { config, _marker: Default::default() }
+    }
+
+    fn configure(meta: &mut ConstraintSystem<F>) -> SigVerificationConfig {
+        let q_enable = meta.selector();
+        let pubkey_x = meta.advice_column();
+        let pubkey_y = meta.advice_column();
+        let message_hash = meta.advice_column();
+        let r = meta.advice_column();
+        let s = meta.advice_column();
+
+        // Real impl would have many more columns + lookups for big-int modular mul/inv/etc.
+        // This is the simplified skeleton
+
+        meta.create_gate("basic signature relation placeholder", |meta| {
+            let q = meta.query_selector(q_enable);
+            let expected = Expression::Constant(F::ZERO); // placeholder
+            // In reality: EC point mul + equality checks
+            vec![q * (/* complex expression */ - expected)]
+        });
+
+        SigVerificationConfig { q_enable, pubkey_x, pubkey_y, message_hash, r, s }
+    }
+}
+
+// ── 2. Main Batch Circuit ────────────────────────────────────────────────────
+
+#[derive(Clone)]
+struct VeriDecentBatchConfig {
+    instance: Column<Instance>,           // public commitments / aggregated root
+    sig_chip: SigVerificationConfig,
+    // Optional: accumulator for running product/randomness
+}
+
+struct VeriDecentBatchCircuit<F: FieldExt> {
+    // Private witnesses - batched inputs
+    signatures: Vec<SignatureData>,  // your struct with pubkey, msg, sig_r, sig_s
+    batch_size: usize,
+}
+
+impl<F: FieldExt> halo2_proofs::circuit::Circuit<F> for VeriDecentBatchCircuit<F> {
+    type Config = VeriDecentBatchConfig;
+    type FloorPlanner = halo2_proofs::circuit::SimpleFloorPlanner;
+
+    fn without_witnesses(&self) -> Self {
+        Self { signatures: vec![], batch_size: self.batch_size }
+    }
+
+    fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
+        let instance = meta.instance_column();
+        let sig_chip = SigVerificationChip::<F>::configure(meta);
+
+        VeriDecentBatchConfig { instance, sig_chip }
+    }
+
+    fn synthesize(
+        &self,
+        config: Self::Config,
+        mut layouter: impl Layouter<F>,
+    ) -> Result<(), Error> {
+        // Parallel witness assignment using Rayon (big win for N > 100)
+        let assigned_rows: Vec<_> = self.signatures.par_iter().enumerate().map(|(i, sig)| {
+            // This part runs in parallel threads
+            layouter.assign_region(
+                || format!("Signature {}", i),
+                |mut region| {
+                    config.sig_chip.q_enable.enable(&mut region, 0)?;
+
+                    // Assign advice columns for this signature
+                    region.assign_advice(|| "pubkey_x", config.sig_chip.pubkey_x, 0, || Value::known(sig.pubkey_x))?;
+                    // ... assign all other columns
+
+                    Ok(())
+                }
+            )
+        }).collect::<Result<Vec<_>, _>>()?;
+
+        // Aggregate / batch constraint (e.g. running product, or simple AND via selectors)
+        layouter.assign_region(
+            || "batch aggregation",
+            |mut region| {
+                // Example: enforce all individual checks indirectly via permutation or lookup
+                // Or accumulate a product of (1 + is_valid_i) or similar
+                Ok(())
+            },
+        )?;
+
+        // Expose public instance (e.g. merkle root of messages or aggregated commitment)
+        layouter.assign_region(
+            || "public instance",
+            |mut region| {
+                for (i, value) in self.compute_public_values().iter().enumerate() {
+                    region.assign_advice_to_instance(config.instance, i, Value::known(*value))?;
+                }
+                Ok(())
+            },
+        )
+    }
+}
+
+// Helper struct (expand as needed)
+struct SignatureData {
+    pubkey_x: SecpFp,
+    pubkey_y: SecpFp,
+    message_hash: SecpFq,
+    sig_r: SecpFq,
+    sig_s: SecpFq,
+}
+```
+
+### Key Implementation Notes & Next Steps for VeriDecent v4.20
+
+| Aspect                  | Current Sketch Level          | Recommended Next Move                              |
+|-------------------------|-------------------------------|-----------------------------------------------------|
+| Real ECDSA/secp256k1    | Placeholder                   | Use halo2_gadgets::ecc or implement big-int chip   |
+| Batch aggregation       | Basic (parallel regions)      | Add running product + random linear combination    |
+| Parallelism             | Rayon on witness assignment   | Extend to multi-threaded MSM/FFT if custom backend |
+| Performance target      | 10–100 sigs per proof         | Test with k=18–22, aim <5s prove on consumer GPU   |
+| Quantum-resistance path | Not yet                       | Later swap to Falcon/Dilithium style gadget        |
+| XiCore lattice tie-in   | Modular chip                  | Make SigVerificationChip pluggable / upgradable    |
+
+This is a **starting blueprint** — production-ready batch verification usually needs 5–10× more columns and heavy use of lookups + range checks.
+
+Want to drill down into any part?  
+- Full single-sig ECDSA gadget?  
+- Batch randomness + aggregation math?  
+- Rough GPU offload plan (ICICLE style)?  
+- Or turn this into pseudocode for your blueprint repo PR?
+
+Let's iterate — shark replication continues 🦈🔄
