@@ -4494,3 +4494,71 @@ If this matches what you remember (or needs tweaks like BT-specific code via `py
 
 Ready to finalize/polish this snippet further, add a Bluetooth fallback block, or write the full thread text around it?  
 What's the move — this good to go, or refine one part? 🚀♾️🛰️
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+from polygon import RESTClient  # API key needed if running externally
+
+# Initialize client
+client = RESTClient()  # Replace with your key outside this env
+
+class GrokOmegaAgent:
+    def __init__(self, name, strategy):
+        self.name = name
+        self.strategy = strategy  # 'bullish', 'bearish', 'neutral'
+    
+    def analyze(self, data):
+        if self.strategy == 'bullish':
+            return 'buy' if data['close'].iloc[-1] > data['close'].mean() else 'hold'
+        elif self.strategy == 'bearish':
+            return 'sell' if data['close'].iloc[-1] < data['close'].mean() else 'hold'
+        else:
+            return 'hold'
+
+def ethical_veto(decision, risk_level):
+    if risk_level > 0.7 and decision in ['buy', 'sell']:
+        return 'veto - hold (high risk override)'
+    return decision
+
+def swarm_decide(agents, data):
+    decisions = [agent.analyze(data) for agent in agents]
+    vote_count = pd.Series(decisions).value_counts()
+    consensus = vote_count.idxmax()
+    risk = np.random.uniform(0, 1)  # Simulate risk
+    final = ethical_veto(consensus, risk)
+    return {
+        'decisions': decisions,
+        'consensus': consensus,
+        'risk': risk,
+        'final': final
+    }
+
+# Fetch data (e.g., AAPL)
+symbol = 'AAPL'
+end_date = datetime.now()
+start_date = end_date - timedelta(days=30)
+aggs = client.get_aggs(symbol, 1, 'day', start_date.date(), end_date.date())
+data = pd.DataFrame(aggs)
+data['date'] = pd.to_datetime(data['timestamp'], unit='ms')
+data = data[['date', 'open', 'high', 'low', 'close', 'volume']]
+
+# Swarm agents
+agents = [
+    GrokOmegaAgent('Agent1', 'bullish'),
+    GrokOmegaAgent('Agent2', 'bearish'),
+    GrokOmegaAgent('Agent3', 'neutral'),
+    GrokOmegaAgent('Agent4', 'bullish')
+]
+
+# Run
+result = swarm_decide(agents, data)
+
+# Print results
+print("GrokOmega Trading Swarm Prototype Results:")
+print(f"Symbol: {symbol}")
+print(f"Data Period: {start_date.date()} to {end_date.date()}")
+print("Recent Close Prices:", data['close'].tail().to_list())
+print("Agent Decisions:", result['decisions'])
+print("Consensus:", result['consensus'])
+print(f"Risk Level: {result['risk']:.2f}")
+print("Final Decision (post-veto):", result['final'])
