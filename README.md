@@ -4562,3 +4562,167 @@ print("Agent Decisions:", result['decisions'])
 print("Consensus:", result['consensus'])
 print(f"Risk Level: {result['risk']:.2f}")
 print("Final Decision (post-veto):", result['final'])
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import copy
+from torch.optim import SGD
+from torch.utils.data import DataLoader
+
+# ────────────────────────────────────────────────────────────────
+#   Example Backbone + Auxiliary Head
+# ────────────────────────────────────────────────────────────────
+
+class SimpleCNN(nn.Module):
+    """Small CNN backbone used in many FL papers (CIFAR/Tiny-ImageNet style)"""
+    def __init__(self, num_classes=100):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.bn1   = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.bn2   = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn3   = nn.BatchNorm2d(128)
+        self.pool  = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc    = nn.Linear(128, num_classes)
+
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        shallow_features = x               # ← we take features after conv2 as auxiliary input
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = self.pool(x)
+        x = x.view(x.size(0), -1)
+        logits = self.fc(x)
+        return logits, shallow_features
+
+class AuxiliaryHead(nn.Module):
+    """Shallow classifier attached to early/intermediate features"""
+    def __init__(self, in_channels=64, num_classes=100):
+        super().__init__()
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc   = nn.Linear(in_channels, num_classes)
+
+    def forward(self, x):
+        x = self.pool(x)
+        x = x.view(x.size(0), -1)
+        return self.fc(x)
+
+
+# ────────────────────────────────────────────────────────────────
+#   HYDRA-FL Local Training Function
+# ────────────────────────────────────────────────────────────────
+
+def hydra_fl_local_train(
+    global_model: nn.Module,
+    local_dataloader: DataLoader,
+    local_epochs: int = 5,
+    lr: float = 0.01,
+    momentum: float = 0.9,
+    weight_decay: float = 1e-4,
+    mu_total: float = 5.0,
+    split_ratio: float = 0.5,           # portion of KD weight on final layer
+    temperature: float = 0.5,
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+) -> dict:
+    """
+    Performs HYDRA-FL local training on one client.
+    Returns the difference in parameters (delta) to be sent to server.
+    """
+    # Working copy of the model
+    model = copy.deepcopy(global_model).to(device)
+    model.train()
+
+    # Freeze teacher (global model)
+    global_teacher = copy.deepcopy(global_model).to(device)
+    global_teacher.eval()
+    for p in global_teacher.parameters():
+        p.requires_grad = False
+
+    # Create auxiliary head (must match the channel size after chosen layer)
+    aux_head = AuxiliaryHead(in_channels=64, num_classes=model.fc.out_features).to(device)
+
+    optimizer = SGD(
+        list(model.parameters()) + list(aux_head.parameters()),
+        lr=lr,
+        momentum=momentum,
+        weight_decay=weight_decay
+    )
+
+    μ1 = mu_total * split_ratio          # final layer KD weight
+    μ2 = mu_total * (1 - split_ratio)    # auxiliary layer KD weight
+
+    criterion_ce = nn.CrossEntropyLoss()
+    criterion_kd = nn.KLDivLoss(reduction="batchmean")
+
+    for epoch in range(local_epochs):
+        for images, labels in local_dataloader:
+            images = images.to(device)
+            labels = labels.to(device)
+
+            # Forward main model
+            logits_final, shallow_feats = model(images)           # assumes forward returns (logits, shallow)
+
+            # Forward auxiliary head
+            logits_aux = aux_head(shallow_feats)
+
+            # Cross-entropy on local labels
+            loss_ce = criterion_ce(logits_final, labels)
+
+            # Teacher forward (no grad)
+            with torch.no_grad():
+                teacher_final, teacher_shallow = global_teacher(images)
+
+            # Soft targets
+            soft_teacher_final = F.softmax(teacher_final / temperature, dim=1)
+            soft_teacher_aux   = F.softmax(teacher_shallow / temperature, dim=1)
+
+            # KL divergences (temperature scaled)
+            loss_kd_final = criterion_kd(
+                F.log_softmax(logits_final / temperature, dim=1),
+                soft_teacher_final
+            ) * (temperature ** 2)
+
+            loss_kd_aux = criterion_kd(
+                F.log_softmax(logits_aux / temperature, dim=1),
+                soft_teacher_aux
+            ) * (temperature ** 2)
+
+            # Combined HYDRA-FL loss
+            loss = loss_ce + μ1 * loss_kd_final + μ2 * loss_kd_aux
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+    # Compute delta = local_model - global_model
+    delta = {}
+    with torch.no_grad():
+        for name, param_local in model.named_parameters():
+            param_global = global_model.get_parameter(name).to(device)
+            delta[name] = (param_local - param_global).cpu()
+
+    return delta
+
+
+# ────────────────────────────────────────────────────────────────
+#   Example usage sketch (outside client)
+# ────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    # Assume you have a global model and local dataloader
+    global_model = SimpleCNN(num_classes=100)
+    # local_dataloader = DataLoader(...)
+
+    delta = hydra_fl_local_train(
+        global_model=global_model,
+        local_dataloader=local_dataloader,
+        local_epochs=5,
+        lr=0.01,
+        mu_total=5.0,
+        split_ratio=0.5,
+        temperature=0.5
+    )
+
+    print("Computed HYDRA-FL delta ready to send to server.")
