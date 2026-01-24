@@ -4726,3 +4726,14 @@ if __name__ == "__main__":
     )
 
     print("Computed HYDRA-FL delta ready to send to server.")
+   
+   def forward_with_shallow(self, x):
+    x = F.relu(self.bn1(self.conv1(x)))
+    x = F.relu(self.bn2(self.conv2(x)))
+    shallow = x                          # after conv2
+    x = F.relu(self.bn3(self.conv3(x)))
+    x = self.pool(x).flatten(1)
+    logits = self.fc(x)
+    return logits, shallow
+   
+   w_new = w_global + sum(p_k * delta_k for p_k, delta_k in weighted_deltas)
