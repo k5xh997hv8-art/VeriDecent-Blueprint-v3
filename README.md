@@ -1,4 +1,4 @@
-hi Coq Starter Skeleton — 2-of-3 multisig (abstracted EC model)
+ihi Coq Starter Skeleton — 2-of-3 multisig (abstracted EC model)
 ============================================================
 
 What this project is
@@ -4826,3 +4826,202 @@ Forking Blueprint: Push this to GitHub as a template—users customize with thei
 
 This is your ripple amplified, Tommy: a dad-proof foundation that protects the core while inviting the world to build. If we converge this into xAI (as your posts hint), it could scale massively. What's the next beat—test a custom sim, add veto logic, or mirror an X thread draft? Let's stack it! 
 
+Good. Then we move from canon → proof.
+
+Below is Minimal v4, designed to do one thing only:
+make “truth as a trajectory” visible and undeniable.
+
+No fluff. No overbuild. This is the demo that anchors the entire project.
+
+VeriDecent — Minimal v4
+
+Proof of Epistemic Trajectories
+
+Goal (Non-Negotiable)
+
+Demonstrate that:
+
+	A claim’s credibility meaningfully changes over time based on agent evaluations and decay — and that this history matters.
+
+If it does only that, it succeeds.
+
+1. What Minimal v4 Includes (And What It Does Not)
+
+✅ Includes
+	•	1 claim
+	•	3–5 agents
+	•	Time-based evaluations
+	•	Credibility decay
+	•	A visible trajectory graph
+	•	Agent reputation impact
+
+❌ Explicitly Excludes
+	•	Blockchain
+	•	Tokens
+	•	Wallets
+	•	Consensus algorithms
+	•	Network decentralization
+	•	Auth systems
+	•	Fancy UI
+
+This is epistemic physics, not infrastructure.
+
+2. Core Objects (Keep These Exact)
+
+2.1 Claim
+
+{
+  "id": "claim_001",
+  "text": "Example claim text",
+  "created_at": t0,
+  "credibility": 0.5,
+  "history": []
+}
+
+	•	Credibility starts neutral (0.5)
+	•	Never deleted
+	•	Only evolves forward in time
+
+2.2 Agent
+
+{
+  "id": "agent_A",
+  "reputation": 0.6,
+  "evaluation_history": []
+}
+
+	•	Reputation starts slightly differentiated (e.g. 0.4–0.7)
+	•	Reputation affects weight, not authority
+
+2.3 Evaluation
+
+{
+  "agent_id": "agent_A",
+  "timestamp": t1,
+  "score": +0.2,
+  "confidence": 0.8
+}
+
+	•	Score ∈ [-1.0, +1.0]
+	•	Confidence modulates impact
+	•	Evaluation is immutable once submitted
+
+3. Credibility Update Rule (Simple, Explicit)
+
+At each evaluation:
+
+impact = agent_reputation × evaluation_score × confidence
+claim_credibility += impact
+
+Then clamp:
+
+0.0 ≤ credibility ≤ 1.0
+
+That’s it.
+No ML. No magic. Total transparency.
+
+4. Epistemic Decay (This Is the Point)
+
+At each time step Δt without evaluations:
+
+credibility = credibility × (1 - decay_rate)
+
+Where:
+	•	decay_rate ≈ 0.01–0.05 per step
+
+This ensures:
+	•	Truth requires maintenance
+	•	Silence is not neutral
+	•	Dormant claims weaken naturally
+
+5. Reputation Update (Minimal but Real)
+
+After N time steps, update agent reputation:
+	•	If agent evaluations correlate with long-term claim stability → reputation slowly increases
+	•	If agent repeatedly boosts claims that later collapse → reputation decays
+
+For v4, keep it crude:
+
+agent_reputation += k × (final_credibility - credibility_at_evaluation)
+
+Small k. Very slow change.
+Reputation should feel earned, not reactive.
+
+6. The Only UI That Matters
+
+You need one visualization:
+
+📈 Claim Credibility Over Time
+	•	X-axis: time
+	•	Y-axis: credibility (0–1)
+	•	Dots: evaluations
+	•	Line: smoothed trajectory
+	•	Optional: color-coded agent inputs
+
+When someone sees this graph, they should immediately understand:
+
+	“Oh — truth isn’t decided. It survives.”
+
+Everything else is secondary.
+
+7. Example Scenario (Script This)
+
+Use a scripted demo so results are deterministic.
+
+Timeline
+	•	t0: claim submitted → credibility 0.5
+	•	t1: agent A supports (+0.2)
+	•	t2: agent B supports (+0.1)
+	•	t3–t5: no evaluations → decay visible
+	•	t6: agent C challenges (-0.4)
+	•	t7: agent A revises (+0.1)
+	•	t8–t10: decay again
+
+End state:
+	•	Claim doesn’t “resolve”
+	•	It stabilizes, weakens, or fragments
+	•	History explains why
+
+That’s the whole thesis in motion.
+
+8. Success Criteria (Be Ruthless)
+
+Minimal v4 is successful if:
+	•	A stranger can explain the system in one sentence after seeing it
+	•	The trajectory graph tells a story without narration
+	•	Critics argue about parameters, not meaning
+
+If people argue about philosophy instead of mechanics, you went too abstract.
+
+9. What You Call This Publicly
+
+Not a beta.
+Not a product.
+
+Call it:
+
+	“VeriDecent v4 — An Epistemic Trajectory Demonstration”
+
+That framing protects you.
+
+10. Your Next Two Commits (Concrete)
+
+1️⃣ Add /canon.md (the document you already have)
+2️⃣ Add /v4-demo/ with:
+	•	simple data model
+	•	scripted timeline
+	•	single graph output
+
+Once those exist, VeriDecent becomes real in a way that can’t be undone.
+
+If you want, next I can:
+	•	translate this into actual code structure (Python or JS)
+	•	help you choose decay constants that feel right
+	•	write the README section that introduces v4 without overselling
+	•	or stress-test the logic for edge cases
+
+But for now:
+This is the spine with muscle attached.
+
+When you’re ready, say:
+“Let’s turn Minimal v4 into code.”
