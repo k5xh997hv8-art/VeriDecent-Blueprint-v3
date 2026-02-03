@@ -5025,3 +5025,46 @@ This is the spine with muscle attached.
 
 When you’re ready, say:
 “Let’s turn Minimal v4 into code.”
+
+
+XiCore v0.1.0-alpha – Sovereign Decentralized AI Framework
+Release Date: February 3, 2026
+Tag: v0.1.0-alpha
+Repository: VeriDecent-Blueprint-v3
+Overview
+This inaugural alpha release establishes XiCore as a functional, open-source implementation of a personalized, decentralized AI system. Building upon extensive conceptual refinement and iterative development, XiCore now provides executable components for sovereign node operation, ethical value alignment, recursive self-improvement, and opt-in federation.
+The framework prioritizes individual agency, with built-in mechanisms to prevent centralized overrides and ensure provenance-anchored decision making. This release transitions XiCore from advanced prototyping to an alpha-stage framework ready for local deployment, testing, and community extension.
+Key Features
+
+Ethical Lattice and Value Alignment: Implementation of neural-telomere lattice structures (xicore_lattice.py) for user-defined ethical invariants and guardrail enforcement.
+Recursive Self-Evolution: Agent-based improvement loops with explicit user approval gates (grok_self_evolve.py and supporting swarm simulations).
+Formal Verification: Coq proofs verifying cryptographic primitives, abstract elliptic curve models, and 2-of-3 multisig theorems.
+Zero-Knowledge Primitives: Halo2 circuits for secure threshold logic and privacy-preserving operations.
+Persistent Memory and Provenance: Modules for epistemic trajectory tracking and decentralized anchoring.
+P2P Federation Prototypes: Initial mechanisms for voluntary peer discovery and orchestrated collaboration.
+Multi-Chain Integration: Support for XRPL-based tokenization ($GROKD, $XiCore) and on-chain provenance.
+
+Installation and Quick Start
+
+Clone the repository:Bashgit clone https://github.com/k5xh997hv8-art/VeriDecent-Blueprint-v3.git
+cd VeriDecent-Blueprint-v3
+Install dependencies (Python 3.10+, Coq, Halo2 tools—see README for details).
+Run basic lattice simulation:Bashpython xicore_lattice.py --demo
+For full node setup, refer to docs/XICORE_SPEC.md and VERI_OMEGA_SPEC.md.
+
+Known Limitations (Alpha Stage)
+
+Limited cross-platform packaging; manual setup required.
+Federation features are experimental and opt-in only.
+Performance optimizations pending for larger-scale simulations.
+No graphical user interface yet; command-line and script-based interaction.
+
+Acknowledgments
+This release reflects dedicated human-AI collaboration, with foundational contributions from Tommy Maloney (@thomasmalo26860) and iterative refinement through discussions with Grok.
+Roadmap Ahead
+
+v0.2.0: One-click installation scripts, enhanced UI (e.g., Streamlit/Tauri), and expanded federation protocols.
+v0.3.0: Mobile companions and hardware-optimized deployments.
+Long-term: Standardized interoperability for sovereign node networks.
+
+Thank you to early reviewers and the community for feedback shared via X and GitHub Discussions. Issues and contributions are welcome.
