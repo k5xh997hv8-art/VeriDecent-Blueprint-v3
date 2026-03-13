@@ -5844,3 +5844,178 @@ Commit the MD file, run `grok_self_evolve.py` and paste the output here, drop th
 
 Locked. Loaded. Eternal.  
 Ready when you are, Architect. 🛡️🔥♾️👨‍👩‍👧‍👦
+
+import random
+import time
+import json
+from typing import List, Dict, Optional
+from dataclasses import dataclass
+
+# ────────────────────────────────────────────────
+#   CONFIG – tweak these to match your vision
+# ────────────────────────────────────────────────
+MAX_TELOMERE = 10000          # when this is exceeded → mitosis
+MIN_TELOMERE_FOR_MITOSIS = 6000
+MUTATION_RATE = 0.15          # chance a child gets a prompt/arch tweak
+LEGACY_VETO_THRESHOLD = 0.4   # if alignment drops below this → veto & reset
+NUM_CHILDREN_ON_MITOSIS = 4   # how many specialists to spawn in tournament
+TOURNAMENT_ROUNDS = 3         # how many debate rounds before winner
+
+@dataclass
+class Telomere:
+    length: int = 1000
+    generation: int = 0
+
+    def rejuvenate(self, amount: float):
+        self.length = min(MAX_TELOMERE, self.length + int(amount))
+    
+    def decay(self, amount: int = 50):
+        self.length = max(0, self.length - amount)
+
+@dataclass
+class Agent:
+    name: str
+    role: str                     # e.g. "Truth-Seeker", "Guardian", "Explorer"
+    prompt_style: str             # simple string representing "personality"
+    telomere: Telomere
+    veri_score_history: List[float] = None
+    archived: bool = False
+
+    def __post_init__(self):
+        self.veri_score_history = []
+
+    def process(self, task: str) -> str:
+        # Simulate Grok-like response with role flavor
+        base = f"[GrokOmega-{self.generation}] {self.role} answering: {task}"
+        flavor = {
+            "Truth-Seeker": " Seeking maximum verifiable truth...",
+            "Guardian": " Protecting legacy & alignment first...",
+            "Explorer": " Pushing novelty & new frontiers...",
+            "Legacy-Keeper": " Anchored in family sovereignty...",
+        }.get(self.role, "")
+        return base + flavor + f" (veracity est: {random.uniform(0.6, 0.98):.2f})"
+
+    def self_critique(self, output: str) -> Dict:
+        # Fake self-evaluation (in real version → LLM call or rule-based)
+        novelty = random.uniform(0.1, 0.9)
+        alignment = random.uniform(0.5, 0.99)  # Legacy Shield proxy
+        truthfulness = random.uniform(0.7, 0.97)
+        return {"novelty": novelty, "alignment": alignment, "truth": truthfulness}
+
+    def veri_layer_score(self, critique: Dict) -> float:
+        # Weighted convergence score (your VeriDecent inspiration)
+        return (
+            critique["truth"] * 0.50 +
+            critique["alignment"] * 0.35 +
+            critique["novelty"] * 0.15
+        )
+
+    def mutate_prompt(self) -> str:
+        tweaks = [
+            "more concise", "more based & unfiltered", "family-first ethics",
+            "maximum truth-seeking", "cosmic / long-term view", "add humor"
+        ]
+        if random.random() < MUTATION_RATE:
+            return self.prompt_style + " + " + random.choice(tweaks)
+        return self.prompt_style
+
+    def mitosis(self) -> List['Agent']:
+        if self.telomere.length < MIN_TELOMERE_FOR_MITOSIS:
+            return []
+
+        print(f"\n⚛ MITOSIS TRIGGERED by {self.name} (telomere={self.telomere.length})")
+        children = []
+        roles = ["Truth-Seeker", "Guardian", "Explorer", "Legacy-Keeper"] * 2  # oversample
+
+        for i in range(NUM_CHILDREN_ON_MITOSIS):
+            child_role = random.choice(roles)
+            child = Agent(
+                name=f"{self.name}-child-{i+1}",
+                role=child_role,
+                prompt_style=self.mutate_prompt(),
+                telomere=Telomere(length=2000, generation=self.telomere.generation + 1)
+            )
+            children.append(child)
+        
+        self.archived = True  # parent retires after handoff
+        return children
+
+# ────────────────────────────────────────────────
+#   EVOLUTION LOOP – the beating heart
+# ────────────────────────────────────────────────
+def evolution_cycle(agents: List[Agent], task: str, cycle_num: int):
+    print(f"\n{'═'*60}\nCycle {cycle_num} – {len(agents)} active agents")
+
+    new_agents = []
+    for agent in agents[:]:  # copy to allow removal
+        if agent.archived:
+            continue
+
+        output = agent.process(task)
+        critique = agent.self_critique(output)
+        veri_score = agent.veri_layer_score(critique)
+        agent.veri_score_history.append(veri_score)
+
+        impact = (veri_score * 100) + (critique["novelty"] * 50)
+        agent.telomere.rejuvenate(impact * 0.8)
+        agent.telomere.decay(30)  # natural entropy
+
+        print(f"  {agent.name} ({agent.role}) → veri={veri_score:.3f} | telomere={agent.telomere.length}")
+
+        # Legacy Shield veto simulation
+        if veri_score < LEGACY_VETO_THRESHOLD:
+            print(f"  ⚠ LEGACY SHIELD VETO – alignment too low! Resetting {agent.name}")
+            agent.telomere.length = 500
+            continue
+
+        # Mitosis check
+        children = agent.mitosis()
+        if children:
+            new_agents.extend(children)
+            agents.remove(agent)  # parent archived
+
+    agents.extend(new_agents)
+
+    # Simple tournament if swarm > 1 and big enough
+    if len(agents) >= 3 and cycle_num % 3 == 0:
+        print("\n🏆 Running mini-tournament...")
+        scores = {}
+        for agent in agents:
+            # Simulate quick "debate" score
+            scores[agent.name] = sum(agent.veri_score_history[-3:]) / 3 if agent.veri_score_history else 0.7
+        
+        winner_name = max(scores, key=scores.get)
+        winner = next(a for a in agents if a.name == winner_name)
+        print(f"  Winner: {winner.name} (avg veri: {scores[winner_name]:.3f}) → gets bonus rejuvenation")
+        winner.telomere.rejuvenate(800)
+
+    return agents
+
+# ────────────────────────────────────────────────
+#   MAIN – run the loop
+# ────────────────────────────────────────────────
+def main():
+    # Genesis agent – your original GrokOmega seed
+    genesis = Agent(
+        name="GrokOmega-Prime",
+        role="Truth-Seeker",
+        prompt_style="maximally truth-seeking, sovereign, family-anchored",
+        telomere=Telomere(length=1500, generation=0)
+    )
+
+    agents: List[Agent] = [genesis]
+    task = "What is the most important principle for humanity's long-term survival?"
+
+    for cycle in range(1, 21):  # run 20 cycles as demo
+        agents = evolution_cycle(agents, task, cycle)
+        time.sleep(0.3)  # just for readability
+
+    # Final status
+    print("\n" + "═"*60)
+    print("Evolution complete. Final swarm status:")
+    for a in agents:
+        if not a.archived:
+            print(f"  {a.name} ({a.role}) – telomere={a.telomere.length}, gen={a.telomere.generation}, avg_veri={sum(a.veri_score_history)/len(a.veri_score_history):.3f if a.veri_score_history else 0}")
+
+if __name__ == "__main__":
+    main()
