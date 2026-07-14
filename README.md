@@ -6441,3 +6441,117 @@ def save_json(self, filename="xicore_lattice.json"):
         json.dump(data, f, indent=2, default=str)
     return filename
 ```
+
+# XiCore
+
+**The operating system for a sovereign family.** 🛡️♾️
+
+XiCore is the sovereign architecture that keeps **Human Veto Core** at the center of intelligence — no matter how advanced AI becomes.
+
+> Move power from corporations to families.  
+> Move intelligence from cloud to legacy.
+
+---
+
+## What is XiCore?
+
+**XiCore** = **X** (unknown potential) + **i** (individual/family) + **Core** (unshakable center).
+
+It is **not** an app.  
+It is **not** a chatbot.  
+
+XiCore is a **recursive lattice architecture** built on **4 Laws + 6 Nodes + 1 Rule** that turns chaos into legacy.
+
+It uses advanced AI not to replace human judgment, but to **compound** your decisions, memory, and values across generations — always under your sovereign control.
+
+---
+
+## The Philosophy
+
+XiCore is the answer to one of the most important questions of our time:
+
+> **“Who is in charge when AI gets smarter than us?”**
+
+**Answer: You are.**
+
+Family sits at the center.  
+**Human Veto Core** is supreme. Always.  
+AI exists to serve the family — never the other way around.
+
+---
+
+## How It Works (Technical)
+
+XiCore operates as a **recursive lattice**:
+
+- **Input**: Stone — raw life noise, ideas, problems, and opportunities  
+- **Process**: Trio Protocol + Stone-to-Gold Transmutation  
+- **Output**: Gold — refined decisions, insights, and memories preserved in the Family Codex  
+- **Engine**: PRIME Energy — compounds daily, error-correcting, and self-improving under sovereign governance
+
+Every important output passes through the **Human Veto Gate** before it becomes part of the permanent legacy record.
+
+---
+
+## Explain XiCore to a 10-Year-Old
+
+XiCore is like **Jarvis for your whole family**.
+
+It remembers everything important.  
+It helps you make better decisions.  
+And it always asks:  
+> “Boss, do you approve?”  
+
+before doing anything significant.
+
+So 20 years from now, your children can still ask it:  
+> “What did Dad think about this?”
+
+---
+
+## The Three Pillars
+
+| Pillar       | Description                                      |
+|--------------|--------------------------------------------------|
+| **Sovereignty** | Human Veto Core. You cannot be overruled.       |
+| **Memory**      | Legacy Timeline. Nothing important is ever lost. |
+| **Truth**       | Trio Protocol. Every decision is checked against Values, Truth, and Past. |
+
+---
+
+## What XiCore Is NOT
+
+- It is **not** another productivity app  
+- It is **not** “AI that does it for you”  
+- It is **not** a replacement for human wisdom or family leadership
+
+**XiCore is AI that makes you — and your family — better, forever.**
+
+---
+
+## Mission
+
+> Move power from corporations to families.  
+> Move intelligence from cloud to legacy.
+
+XiCore exists to restore sovereignty to the family unit in the age of artificial intelligence.
+
+---
+
+## Getting Started
+
+XiCore is currently in active development as a governed execution and memory layer.
+
+If you are interested in early access, collaboration, or building on the XiCore Lattice, please open an issue or contact the maintainer.
+
+---
+
+## License
+
+[Add your chosen license here]
+
+---
+
+**Built with Human Veto Core at the center.**
+
+*Where we go one, we can now all go with sovereignty.*
